@@ -1,0 +1,32 @@
+.align-right {
+    text-align: right;
+}
+.span-bold {
+    font-weight: bold;
+    color: black;
+}
+
+.bordercss {
+    text-align: center;
+    border: 1px solid;
+    border-top: 1px solid;
+    padding: 5px 0px 5px 0px;
+    background: #c9cee3;
+}
+a.brand-link {
+    height: 63px;
+    background: #fff;
+}
+.brand-link {
+    padding: 17px 35%;
+}
+img.brand-image {
+    min-height: 67px;
+}
+.sidebar-collapse .brand-link {
+    padding: 0;
+}
+.brand-link .brand-image {
+    margin-left: 0.2rem;
+    margin-right: 0.5rem;
+}
