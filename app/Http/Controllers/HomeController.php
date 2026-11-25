@@ -80,10 +80,36 @@ class HomeController extends Controller
 
     public function deleteSelected(Request $request)
     {
-        // dd($request->table);
-        $ids = $request->ids;
-        $table = $request->table;
-        DB::table($table)->whereIn('id', $ids)->delete();
+        $allowedTables = [
+            'categories',
+            'blogs',
+            'events',
+            'news',
+            'banners',
+            'members',
+            'contact_form_data',
+            'get_quotes',
+            'event_register_form_data',
+            'form_buiders',
+            'forms',
+            'apply_nows',
+            'mentor_or_fund_raisers',
+            'investor_enrollment_forms',
+            'corporate_enrollment_forms',
+            'dynamic_partners',
+            'startup_portfolios',
+            'partner_in_actions',
+            'ecosystem_partners',
+            'institutional_partners',
+        ];
+
+        $validated = $request->validate([
+            'table' => ['required', 'string', 'in:' . implode(',', $allowedTables)],
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        DB::table($validated['table'])->whereIn('id', $validated['ids'])->delete();
         return response()->json(['success' => 'Selected items deleted successfully']);
     }
 
@@ -253,6 +279,10 @@ class HomeController extends Controller
 
     public function upload(Request $request)
     {
+        $request->validate([
+            'filepond' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
+        ]);
+
         if ($request->hasFile('filepond')) {
             $file = $request->file('filepond');
             $path = $file->store('temp_images');
@@ -265,8 +295,16 @@ class HomeController extends Controller
 
     public function revert(Request $request)
     {
-        $path = $request->getContent();
-        Storage::delete($path);
+        $rawPath = trim($request->getContent());
+        // Restrict deletion strictly to files inside temp_images/ to prevent arbitrary file deletion
+        if (!Str::startsWith($rawPath, 'temp_images/') || str_contains($rawPath, '..')) {
+            return response()->json(['message' => 'Invalid file path'], 400);
+        }
+
+        $safePath = 'temp_images/' . basename($rawPath);
+        if (Storage::exists($safePath)) {
+            Storage::delete($safePath);
+        }
 
         return response()->json(['message' => 'File deleted']);
     }
@@ -295,7 +333,7 @@ class HomeController extends Controller
                 'company_name' => 'required',
                 'industry_category' => 'required',
                 'incorprated_since' => 'required',
-                // 'filepond' => 'required',
+                'attachment' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
                 'description' => ['required', new NoScriptTags],
             ]);
 
@@ -318,14 +356,15 @@ class HomeController extends Controller
             $apply->industry_category = $request->industry_category;
             $apply->incorprated_since = $request->incorprated_since;
             $apply->description = $request->description;
-            $tempPath = $request->image_id;
-            $realupload = $request->attachment;
-            // $orignal_name = $realupload->getClientOriginalName();
-            if (Storage::exists($tempPath)) {
-                // Storage::move($tempPath, $finalPath);
-                Storage::delete($tempPath);
-                $filename = uploadImage($realupload, 'applyNow');
-                $apply->attachment = $filename;
+            $tempPath = (string) $request->image_id;
+            $realupload = $request->file('attachment');
+            if ($realupload && Str::startsWith($tempPath, 'temp_images/') && !str_contains($tempPath, '..')) {
+                $safeTempPath = 'temp_images/' . basename($tempPath);
+                if (Storage::exists($safeTempPath)) {
+                    Storage::delete($safeTempPath);
+                    $filename = uploadImage($realupload, 'applyNow');
+                    $apply->attachment = $filename;
+                }
             }
             $apply->term_condition = $request->checkboxValue;
             $apply->save();

@@ -38,16 +38,38 @@ class CustomFormDataController extends Controller
 
         // Check if any file is attached to the request
         if ($request->hasFile('*')) {
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'doc', 'docx'];
+            $allowedMimes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+            $maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+
             // Handle file upload
             foreach ($request->allFiles() as $key => $files) {
+                $fileList = is_array($files) ? $files : [$files];
+                foreach ($fileList as $file) {
+                    if (!$file || !$file->isValid()) {
+                        continue;
+                    }
+                    $ext = strtolower($file->getClientOriginalExtension());
+                    $mime = $file->getMimeType();
+                    if (
+                        !in_array($ext, $allowedExtensions, true) ||
+                        !in_array($mime, $allowedMimes, true) ||
+                        $file->getSize() > $maxSizeBytes
+                    ) {
+                        return redirect()->back()->with('error', 'Invalid file type or size. Allowed: JPG, PNG, WEBP, PDF, DOC, DOCX (max 10MB).');
+                    }
 
-                // Check if it's a valid file
-                if ($files->isValid()) {
-                    // Generate a unique name for the file
-                    $imageName = time() . '_' . $files->getClientOriginalName();
-                    // Move the file to the desired location
-                    $files->move(public_path('images'), $imageName);
-                    // Add the file name to the validated data
+                    $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeBase = substr(preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName) ?: 'upload', 0, 80);
+                    $imageName = time() . '_' . Str::random(8) . '_' . $safeBase . '.' . $ext;
+                    $file->move(public_path('images'), $imageName);
                     $allData['files'][] = ['key' => $imageName, 'path' => 'images/' . $imageName];
                 }
             }

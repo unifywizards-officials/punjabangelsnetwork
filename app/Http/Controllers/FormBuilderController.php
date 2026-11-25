@@ -134,6 +134,7 @@ class FormBuilderController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|unique:form_buiders,name,' . $request->id,
+                'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             ]);
 
             if ($validator->fails()) {

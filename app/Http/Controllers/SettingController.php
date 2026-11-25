@@ -81,6 +81,10 @@ class SettingController extends Controller
 
     //    return  $request->all();
         
+        $request->validate([
+            'website_logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
         $setting=Settings::find(1);
         $setting->user_id=Auth::user()->id;
         if($request->file('website_logo')){

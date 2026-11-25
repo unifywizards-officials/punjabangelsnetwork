@@ -18,7 +18,8 @@
      href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <style>
     body.login-page {
-    background: url(https://wallpapers.com/images/hd/global-travel-wallpaper-ibk7fgrvtvhs7qzg.jpg);
+    background-size: cover;
+    background-position: center;
     position: relative;
 }
 

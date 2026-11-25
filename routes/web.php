@@ -56,11 +56,6 @@ Route::get('/guest-registration', function () {
 Route::get('event-form/{event}', [EventController::class, 'eventFormView'])->name('eventForm.view');
 Route::post('submit-visitor-form', [HomeController::class, 'submitvisitorform'])->name('submit-visitor-form');
 
-Route::get('/abcd', function () {
-    // return view('guest.demo');
-    // return Hash::make('panindiamanager!@#123');
-});
-
 Route::get('/captech-24', function () {
 
     $blog=Events::where('slug','captech-2024')->first();
@@ -99,38 +94,8 @@ Route::get('/startup-form', function () {
 Route::get('/', [PageController::class, 'homepage'])->name('homepage');
 
 
-Route::get('/send-email', function () {
-    // Email sending logic here
-    // Mail::to('rajan@unifywizards.com')->send(new SubscribeMail());
-    // Mail::to(['rajan@unifywizards.com','anand.singh@unifywizards.com','manish.negi@unifywizards.com'])->send(new SubscribeMail());
-    Mail::to(['anand.singh@unifywizards.com','manish.negi@unifywizards.com'])->send(new SubscribeMail());
-
-    return 'Email sent successfully';
-});
-
-Route::get('/send-email1', function () {
-    $toEmail = 'manish.negi@unifywizards.com';
-    // Define the email content
-    $data = [
-        'subject' => 'Test Email',
-        'body' => 'This is a test email sent using SMTP.'
-    ];
-
-    // Send email using Laravel's Mail facade
-    Mail::raw($data['body'], function ($message) use ($toEmail, $data) {
-        $message->to($toEmail)
-            ->subject($data['subject']);
-    });
-
-    return 'Email sent successfully!';
-});
-
-
-
-
-// Route::view('admin','admin.dashboard');
-// Route::view('guest','guest.dashboard');
-Auth::routes();
+// Public registration disabled for security
+Auth::routes(['register' => false]);
 // Route::get('contact', [HomeController::class, 'contactform'])->name('contact.show');
 Route::get('/visa-and-insurance', [HomeController::class, 'show_visa_insurance'])->name('show_visa_insurance');
 

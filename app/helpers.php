@@ -13,13 +13,34 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 if (! function_exists('uploadImage')) {            // for image upload
-    function uploadImage($filename,$folder) {
-            // $file= $request->file($filename);
-            $filenameWithExtention= date('Y-m-d-hisu').'_'.$filename->getClientOriginalName();
-            $filename->move(public_path($folder), $filenameWithExtention);
-            return $folder.'/'.$filenameWithExtention;
+    function uploadImage($filename, $folder) {
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+        $allowedMimes = [
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+            'application/pdf',
+        ];
+
+        $ext = strtolower($filename->getClientOriginalExtension());
+        $mime = $filename->getMimeType();
+
+        if (!in_array($ext, $allowedExtensions, true) || !in_array($mime, $allowedMimes, true)) {
+            throw new \InvalidArgumentException('Unsupported or disallowed file type uploaded.');
+        }
+
+        // Prevent path traversal in target folder
+        $safeFolder = trim(str_replace(['..', '\\'], ['', '/'], $folder), '/');
+        $baseName = pathinfo($filename->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $safeBase = substr($safeBase ?: 'file', 0, 80);
+
+        $filenameWithExtention = date('Y-m-d-hisu') . '_' . Str::random(8) . '_' . $safeBase . '.' . $ext;
+        $filename->move(public_path($safeFolder), $filenameWithExtention);
+        return $safeFolder . '/' . $filenameWithExtention;
     }
-   }
+}
 
    if (! function_exists('international')) {            // for international packages
         function international() {
